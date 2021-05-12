@@ -9,7 +9,7 @@ import socket
 import logging
 import getpass
 import requests
-
+import warnings
 from BaseSpacePy.api.APIClient import APIClient
 from BaseSpacePy.api.BaseAPI import BaseAPI
 from BaseSpacePy.api.BaseSpaceException import *
@@ -125,43 +125,43 @@ class BaseSpaceAPI(BaseAPI):
     def _getLocalCredentials(self, profile):
         '''
         Returns credentials from local config file (~/.basespace/<configname>.cfg)
-        If some or all credentials are missing, they aren't included the in the returned dict
+        If some or all credentials are missing or the config file is not preset,
+        they aren't included the in the returned dict
 
         :param profile: Profile name to use to find local config file
         :returns: A dictionary with credentials from local config file
         '''
         config_file = os.path.join(os.path.expanduser('~/.basespace'), "%s.cfg" % profile)
         if not os.path.exists(config_file):
-            raise CredentialsException("Could not find config file: %s" % config_file)
+            warnings.warn("Could not find config file: %s" % config_file)
         section_name = "DEFAULT"
         cred = {}
-        config = configparser.SafeConfigParser()
-        if config.read(config_file):
-            cred['name'] = profile
-            try:
-                cred['clientKey'] = config.get(section_name, "clientKey")
-            except configparser.NoOptionError:
-                pass
-            try:
-                cred['clientSecret'] = config.get(section_name, "clientSecret")
-            except configparser.NoOptionError:
-                pass
-            try:
-                cred['apiServer'] = config.get(section_name, "apiServer")
-            except configparser.NoOptionError:
-                pass
-            try:
-                cred['apiVersion'] = config.get(section_name, "apiVersion")
-            except configparser.NoOptionError:
-                pass
-            try:
-                cred['appSessionId'] = config.get(section_name, "appSessionId")
-            except configparser.NoOptionError:
-                pass
-            try:
-                cred['accessToken'] = config.get(section_name, "accessToken")
-            except configparser.NoOptionError:
-                pass
+        config = configparser.ConfigParser()
+        config.read(config_file)
+        try:
+            cred['clientKey'] = config.get(section_name, "clientKey")
+        except configparser.NoOptionError:
+            pass
+        try:
+            cred['clientSecret'] = config.get(section_name, "clientSecret")
+        except configparser.NoOptionError:
+            pass
+        try:
+            cred['apiServer'] = config.get(section_name, "apiServer")
+        except configparser.NoOptionError:
+            pass
+        try:
+            cred['apiVersion'] = config.get(section_name, "apiVersion")
+        except configparser.NoOptionError:
+            pass
+        try:
+            cred['appSessionId'] = config.get(section_name, "appSessionId")
+        except configparser.NoOptionError:
+            pass
+        try:
+            cred['accessToken'] = config.get(section_name, "accessToken")
+        except configparser.NoOptionError:
+            pass
         return cred
 
     def getAppSessionById(self, Id):
